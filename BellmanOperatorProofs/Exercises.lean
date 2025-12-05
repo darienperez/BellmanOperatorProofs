@@ -110,7 +110,6 @@ lemma bellman_inner_mono
   ∀ s a,
     M.bellmanInner V s a ≤ M.bellmanInner W s a := by
     intro s a
-  -- same proof as before, but using M.γ_nonneg and M.P_nonneg
     have hsum :
       ∑ s', M.P s a s' * V s'
         ≤
