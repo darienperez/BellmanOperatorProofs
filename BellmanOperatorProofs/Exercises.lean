@@ -1,66 +1,44 @@
-import Mathlib.Tactic.Linarith
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
-/-
-  1.)
--/
-example (x y : ℝ) : |x + y| ≤ |x| + |y| := abs_add_le x y
-
-#check abs
-
-example (x y : ℝ) : |x + y| ≤ |x| + |y| := by
-  have hx1 : -|x| ≤ x := neg_abs_le x
-  have hy1 : -|y| ≤ y := neg_abs_le y
-  have hx2 : x ≤ |x| := le_abs_self x
-  have hy2 : y ≤ |y| := le_abs_self y
-  have hlow : -(|x| + |y|) ≤ x + y := by linarith
-  have hhigh : x + y ≤ |x| + |y| := by linarith
-  exact abs_le.mpr ⟨hlow, hhigh⟩
+import Mathlib.Tactic.Linarith
 
 /-
-  2.) Finite weighted sum monotonicity
+  1.) expect_mono
 -/
--- Given f i ≤ g i for all i, and w i ≥ 0, show:
 lemma expect_mono
   {ι : Type} [Fintype ι]
   {f g w : ι → ℝ}
   (hfg : ∀ i, f i ≤ g i)
-  (hw : ∀ i, 0 ≤ w i) :
-  ∑ i, w i * f i ≤ ∑ i, w i * g i := by
+  (hw : ∀ i, 0 ≤ w i)
+  : ∑ i , w i * f i ≤ ∑ i , w i * g i := by
     apply Finset.sum_le_sum
     intro i hi
     have h1 : f i ≤ g i := hfg i
-    exact mul_le_mul_of_nonneg_left h1 (hw i)
+    have h2 : 0 ≤ w i := hw i
+    exact mul_le_mul_of_nonneg_left h1 h2
 
 /-
-  3.) Supremum monotonicity over a finite set
+  2.) sup_mono
 -/
--- open scoped BigOperators
-
 lemma sup_mono
   {ι : Type} [Fintype ι]
   {β : Type} [LinearOrder β] [OrderBot β]
-  (f g : ι → β)
+  {f g : ι → β}
   (hfg : ∀ i, f i ≤ g i) :
   Finset.univ.sup f ≤ Finset.univ.sup g := by
     apply Finset.sup_le
     intro i hi
-    have h1 := hfg i
+    have h1 : f i ≤ g i := hfg i
     have h2 : g i ≤ Finset.univ.sup g := by
       exact Finset.le_sup hi
     exact le_trans h1 h2
 
 /-
-  4.) Monotonicity of a weighted sup
-
-  Practice:
-  - sum inside
-  - sup outside
-  - them together staying monotone
+  3.) sup_of_add_mono
 -/
 lemma sup_of_add_mono
-  {ι : Type} [Fintype ι] [DecidableEq ι]
+  {ι : Type} [Fintype ι]
   {β : Type} [LinearOrder β] [OrderBot β] [Add β] [AddLeftMono β]
   {f g h : ι → β}
   (hfg : ∀ i, f i ≤ g i) :
@@ -73,12 +51,13 @@ lemma sup_of_add_mono
     exact add_le_add_left h1 (h i)
 
 /-
-  4.) Monotonicity of a weighted sup
+  4.) mul_mono
 -/
 lemma mul_mono
   {ι : Type} [Fintype ι]
-  {γ : ℝ} (hγ : 0 ≤ γ)
-  {f g : ι → ℝ}
+  {γ : ℝ}
+  (f g : ι → ℝ)
+  (hγ : 0 ≤ γ)
   (hfg : ∀ i, f i ≤ g i) :
   ∀ i, γ * f i ≤ γ * g i := by
     intro i
@@ -86,9 +65,11 @@ lemma mul_mono
     exact mul_le_mul_of_nonneg_left h1 hγ
 
 
+/-
+  5.) bellman_inner_mono
+-/
 structure MDP (S A : Type) [Fintype S] [Fintype A] where
-  γ : ℝ
-  γ_nonneg : 0 ≤ γ
+  {γ : ℝ} (γ_nonneg : 0 ≤ γ)
   R : S → A → ℝ
   P : S → A → S → ℝ
   P_nonneg : ∀ s a s', 0 ≤ P s a s'
@@ -98,7 +79,6 @@ namespace MDP
 
 variable {S A : Type} [Fintype S] [Fintype A]
 variable (M : MDP S A)
-
 abbrev V (M : MDP S A) := S → ℝ
 
 def bellmanInner (M : MDP S A) (v : M.V) (s : S) (a : A) : ℝ :=
@@ -119,13 +99,9 @@ lemma bellman_inner_mono
         (fun s' => M.P_nonneg s a s')
     have hmul :
       M.γ * ∑ s', M.P s a s' * V s'
-        ≤
+       ≤
       M.γ * ∑ s', M.P s a s' * W s' :=
       mul_le_mul_of_nonneg_left hsum M.γ_nonneg
-    have hadd :
-      M.R s a + M.γ * ∑ s', M.P s a s' * V s'
-        ≤
-      M.R s a + M.γ * ∑ s', M.P s a s' * W s' :=
-      add_le_add_left hmul (M.R s a)
-    exact hadd
+    exact add_le_add_left hmul (M.R s a)
+
 end MDP
