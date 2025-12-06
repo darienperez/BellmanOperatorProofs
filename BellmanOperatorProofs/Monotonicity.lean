@@ -140,9 +140,10 @@ lemma mono_of_T -- refined
       ∀ a,
         bellmanInner M V' s a ≤ bellmanInner M W' s a := by
           exact mono_of_bellman_inner M hVW s
-    exact sup'_mono
+    exact mono_of_sup'
         (ι := A)
         (f := fun a => bellmanInner M V' s a)
         (g := fun a => bellmanInner M W' s a)
+        Finset.univ_nonempty
         hpoint
 end MDP
