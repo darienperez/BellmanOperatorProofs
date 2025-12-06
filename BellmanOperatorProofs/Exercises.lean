@@ -1,22 +1,53 @@
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Tactic.Linarith
 
 /-
-  1.) expect_mono
+  1.) expect_mono (refined)
 -/
 lemma expect_mono
   {ι : Type} [Fintype ι]
   {f g w : ι → ℝ}
   (hfg : ∀ i, f i ≤ g i)
-  (hw : ∀ i, 0 ≤ w i)
-  : ∑ i , w i * f i ≤ ∑ i , w i * g i := by
+  (hw : ∀ i, 0 ≤ w i) :
+  ∑ i, w i * f i ≤ ∑ i, w i * g i := by
     apply Finset.sum_le_sum
     intro i hi
-    have h1 : f i ≤ g i := hfg i
-    have h2 : 0 ≤ w i := hw i
-    exact mul_le_mul_of_nonneg_left h1 h2
+    exact mul_le_mul_of_nonneg_left (hfg i) (hw i)
+
+
+/-
+  1.) expect_mono
+-/
+-- lemma expect_mono
+--   {ι : Type} [Fintype ι]
+--   {f g w : ι → ℝ}
+--   (hfg : ∀ i, f i ≤ g i)
+--   (hw : ∀ i, 0 ≤ w i)
+--   : ∑ i , w i * f i ≤ ∑ i , w i * g i := by
+--     apply Finset.sum_le_sum
+--     intro i hi
+--     have h1 : f i ≤ g i := hfg i
+--     have h2 : 0 ≤ w i := hw i
+--     exact mul_le_mul_of_nonneg_left h1 h2
+
+
+/-
+  2.) sup'_mono (refined) --all me
+-/
+lemma sup'_mono
+  {ι : Type} [Fintype ι]
+  {f g h : ι → ℝ} [Nonempty ι]
+  (hfg : ∀ i, f i ≤ g i) :
+  (Finset.univ : Finset ι).sup' (by exact Finset.univ_nonempty) f
+    ≤
+  (Finset.univ : Finset ι).sup' (by exact Finset.univ_nonempty) g := by
+    apply Finset.sup'_le
+    intro i hi
+    have h1 :
+      g i ≤ (Finset.univ : Finset ι).sup' (by exact Finset.univ_nonempty) g := by
+      exact (Finset.univ : Finset ι).le_sup' (hi) (f := g)
+    exact le_trans (hfg i) h1
 
 /-
   2.) sup_mono
