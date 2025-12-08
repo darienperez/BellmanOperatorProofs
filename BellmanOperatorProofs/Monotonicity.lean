@@ -134,8 +134,8 @@ lemma mono_of_T -- refined
   {V' W' : S → ℝ}
   (hVW : ∀ s, V' s ≤ W' s) :
   ∀ s, T M V' s≤ T M W' s := by
-    unfold T
     intro s
+    unfold T
     have hpoint :
       ∀ a,
         bellmanInner M V' s a ≤ bellmanInner M W' s a := by
@@ -146,4 +146,27 @@ lemma mono_of_T -- refined
         (g := fun a => bellmanInner M W' s a)
         Finset.univ_nonempty
         hpoint
+
+
+-- Experimenting with this below
+
+-- abbrev S₀ := Fin 2
+-- abbrev A₀ := Fin 2
+
+-- def M₀ : MDP S₀ A₀ :=
+-- { γ := 0.9,
+--   γ_nonneg := by linarith,
+--   R := fun s a => 1,
+--   P := fun s a s' => 0.5,
+--   P_nonneg := by
+--     intro
+--     linarith,
+--   P_row_sum_one := by
+--     intro s a
+--     -- two states, each 0.5
+--     have : (∑ (_s' : S₀), (0.5 : ℝ)) = 1 := by
+--       -- S₀ is Fin 2, so sum is 2 * 0.5
+--       norm_num [Finset.univ, Fintype.card_fin]  -- or you can just `simp` if you prefer
+--     simpa [P] using this
+-- }
 end MDP
